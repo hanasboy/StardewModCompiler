@@ -1,35 +1,17 @@
-name: Build Stardew Valley Mod
+using System;
 
-on: [push, workflow_dispatch]
+namespace SmartEconomyMod
+{
+    public class ModEntry : IModInterface
+    {
+        public void Entry(object helper)
+        {
+            Console.WriteLine("SmartNPCAndEconomy: Loaded Successfully!");
+        }
+    }
 
-jobs:
-  build:
-    runs-on: windows-latest
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 6.0.x
-
-    - name: Create Fake Game Folder
-      run: |
-        mkdir D:\FakeGame
-        Set-Content -Path "D:\FakeGame\Stardew Valley.dll" -Value "Fake Stardew Valley Game DLL"
-        Set-Content -Path "D:\FakeGame\StardewModdingAPI.exe" -Value "Fake SMAPI Executable File"
-
-    - name: Build Mod
-      run: |
-        dotnet new classlib -n SmartNPCAndEconomyMod --force
-        copy ModEntry.cs SmartNPCAndEconomyMod\
-        cd SmartNPCAndEconomyMod
-        dotnet add package Pathoschild.Stardew.ModBuildConfig
-        dotnet build -c Release /p:GamePath="D:\FakeGame"
-
-    - name: Upload Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: MySmartModDLL
-        path: SmartNPCAndEconomyMod/bin/Release/net6.0/SmartNPCAndEconomyMod.dll
+    public interface IModInterface 
+    { 
+        void Entry(object helper); 
+    }
+}
