@@ -1,17 +1,30 @@
-using System;
+name: Build Stardew Valley Mod
+on: [push, workflow_dispatch]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-namespace SmartEconomyMod
-{
-    public class ModEntry : IModInterface
-    {
-        public void Entry(object helper)
-        {
-            Console.WriteLine("SmartNPCAndEconomy: Loaded Successfully!");
-        }
-    }
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 6.0.x
 
-    public interface IModInterface 
-    { 
-        void Entry(object helper); 
-    }
-}
+      - name: Create Mock Project
+        run: |
+          dotnet new classlib -n SmartEconomyMod -f net6.0
+          rm SmartEconomyMod/Class1.cs
+          mv ModEntry.cs SmartEconomyMod/
+
+      - name: Build Mod DLL
+        run: |
+          cd SmartEconomyMod
+          dotnet build -c Release
+
+      - name: Upload Finished DLL
+        uses: actions/upload-artifact@v3
+        with:
+          name: SmartEconomyMod-Artifact
+          path: SmartEconomyMod/bin/Release/net6.0/SmartEconomyMod.dll
