@@ -17,7 +17,8 @@ jobs:
     - name: Create Fake Game Folder
       run: |
         mkdir D:\FakeGame
-        echo "" > D:\FakeGame\StardewValley.dll
+        # Đệ đã thêm dấu ngoặc kép để tạo file có khoảng trắng chuẩn game gốc rồi đây Sư huynh!
+        echo "" > "D:\FakeGame\Stardew Valley.dll"
         echo "" > D:\FakeGame\StardewModdingAPI.exe
 
     - name: Build Mod
