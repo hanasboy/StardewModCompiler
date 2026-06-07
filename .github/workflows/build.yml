@@ -15,36 +15,31 @@ jobs:
             6.0.x
             8.0.x
 
-      - name: Create Mock Project & Add Dependencies
+      - name: Create Project & Force Reference
         run: |
           # 1. Tạo project class library mới bằng template mặc định
           dotnet new classlib -n SmartEconomyMod
           
-          # 2. Cài đặt bộ công cụ build mod chính thức bản 4.1.1
+          # 2. Di chuyển vào thư mục project
           cd SmartEconomyMod
+
+          # 3. Cài đặt gói ModBuildConfig bản 4.1.1
           dotnet add package Pathoschild.Stardew.ModBuildConfig --version 4.1.1
 
-          # 3. Ép cấu hình project về net6.0 để tương thích với game
+          # 4. Ép TargetFramework về net6.0
           sed -i 's/<TargetFramework>.*<\/TargetFramework>/<TargetFramework>net6.0<\/TargetFramework>/g' SmartEconomyMod.csproj
 
-          # 4. Tạo thư mục game giả lập ở cấp ngoài song song với project
-          mkdir -p ../mock-game
-
-          # 5. Copy file DLL của huynh vào và ép tên chuẩn "StardewValley.dll" (viết liền)
-          cp ../"Stardew Valley.dll" ../mock-game/StardewValley.dll || cp ../StardewValley.dll ../mock-game/StardewValley.dll || cp ../stardew*.dll ../mock-game/StardewValley.dll || true
+          # 5. MẸO QUYẾT ĐỊNH: Chèn cấu hình ép tắt tính năng tự dò tìm game, chỉ định đích danh file DLL của huynh
+          # Chúng ta sẽ cấu hình để project tham chiếu trực tiếp tới file DLL huynh tải lên ở thư mục gốc.
+          sed -i '/<\/PropertyGroup>/i \\    <EnableGameAutodetect>false<\/EnableGameAutodetect>\n    <HasGameBinaries>false<\/HasGameBinaries>' SmartEconomyMod.csproj
           
-          # 6. MẸO QUYẾT ĐỊNH: Tạo file chạy giả lập "StardewValley" không đuôi để vượt qua bộ check của SMAPI trên Linux
-          touch ../mock-game/StardewValley
-          chmod +x ../mock-game/StardewValley
+          # Tìm file DLL của huynh (bất kể tên có dấu cách hay không) và copy thẳng vào thư mục project để làm Reference thủ công
+          cp ../"Stardew Valley.dll" ./StardewValley.dll || cp ../StardewValley.dll ./StardewValley.dll || cp ../stardew*.dll ./StardewValley.dll || true
 
-          # Hiển thị log kiểm tra để huynh thấy cấu trúc chuẩn trước khi build
-          echo "=== Danh sách file trong mock-game ==="
-          ls -la ../mock-game/
+          # Thêm dòng tham chiếu trực tiếp file DLL này vào file csproj
+          sed -i '/<\/Project>/i \\  <ItemGroup>\n    <Reference Include="StardewValley">\n      <HintPath>StardewValley.dll<\/HintPath>\n      <Private>false<\/Private>\n    <\/Reference>\n  <\/ItemGroup>' SmartEconomyMod.csproj
 
-          # 7. Tạo file user cấu hình đường dẫn game ép SMAPI nhận thư mục ảo
-          echo '<Project><PropertyGroup><GamePath>../mock-game</GamePath></PropertyGroup></Project>' > SmartEconomyMod.csproj.user
-
-          # 8. Dọn dẹp file mặc định và đưa code chính của huynh vào project
+          # 6. Dọn dẹp file mặc định và đưa code chính của huynh vào project
           cd ..
           rm -f SmartEconomyMod/Class1.cs
           mv ModEntry.cs SmartEconomyMod/
@@ -52,8 +47,8 @@ jobs:
       - name: Build Mod DLL
         run: |
           cd SmartEconomyMod
-          # Thực hiện build và tắt tính năng đóng gói zip (vì không có game thật)
-          dotnet build -c Release /p:EnableModZip=false
+          # Thực hiện build với cấu hình bỏ qua tạo file Zip game gốc và bỏ qua kiểm tra thư mục cài game
+          dotnet build -c Release /p:EnableModZip=false /p:IgnoreMaxMissingArtifacts=true
 
       - name: Upload Finished DLL
         uses: actions/upload-artifact@v4
