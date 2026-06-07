@@ -17,7 +17,7 @@ jobs:
 
       - name: Create Mock Project & Add Dependencies
         run: |
-          # 1. Tạo project class library bằng template mặc định
+          # 1. Tạo project class library mới bằng template mặc định
           dotnet new classlib -n SmartEconomyMod
           
           # 2. Cài đặt bộ công cụ build mod chính thức bản 4.1.1
@@ -27,17 +27,17 @@ jobs:
           # 3. Ép cấu hình project về net6.0
           sed -i 's/<TargetFramework>.*<\/TargetFramework>/<TargetFramework>net6.0<\/TargetFramework>/g' SmartEconomyMod.csproj
 
-          # 4. Tạo thư mục game giả lập
+          # 4. Tạo thư mục game giả lập ở cấp ngoài
           mkdir -p ../mock-game
 
-          # 5. Mẹo tìm kiếm thông minh: Bất kể file dll của huynh viết hoa/thường thế nào, ép nó về tên chuẩn "Stardew Valley.dll"
-          find .. -maxdepth 1 -iname "*stardew*valley*.dll" -exec cp {} ../mock-game/"Stardew Valley.dll" \;
+          # 5. Tìm file DLL huynh đã tải lên ở thư mục gốc và copy chuẩn tên "StardewValley.dll" vào thư mục giả lập
+          cp ../"Stardew Valley.dll" ../mock-game/StardewValley.dll || cp ../StardewValley.dll ../mock-game/StardewValley.dll || cp ../stardew*.dll ../mock-game/StardewValley.dll || true
           
-          # Kiểm tra xem file đã vào đúng chỗ chưa (để log hiển thị cho huynh yên tâm)
-          echo "=== Kiểm tra thư mục game giả lập ==="
+          # Hiển thị cấu trúc thư mục giả lập lên log để kiểm tra cho chắc chắn
+          echo "=== Danh sách file trong thư mục game giả lập ==="
           ls -la ../mock-game/
 
-          # 6. Tạo file user cấu hình đường dẫn game ảo
+          # 6. Tạo file user cấu hình đường dẫn game
           echo '<Project><PropertyGroup><GamePath>../mock-game</GamePath></PropertyGroup></Project>' > SmartEconomyMod.csproj.user
 
           # 7. Dọn dẹp file mặc định và đưa code chính của huynh vào project
