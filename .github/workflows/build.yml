@@ -11,44 +11,50 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: |
-            6.0.x
-            8.0.x
+          dotnet-version: 6.0.x
 
-      - name: Create Project & Force Reference
+      - name: Create Clean Project & Manual Reference
         run: |
-          # 1. Tạo project class library mới bằng template mặc định
-          dotnet new classlib -n SmartEconomyMod
-          
-          # 2. Di chuyển vào thư mục project
+          # 1. Tạo thư mục project mới
+          mkdir -p SmartEconomyMod
           cd SmartEconomyMod
 
-          # 3. Cài đặt gói ModBuildConfig bản 4.1.1
-          dotnet add package Pathoschild.Stardew.ModBuildConfig --version 4.1.1
+          # 2. Tự thiết kế file csproj chuẩn .NET 6 để không bị SMAPI quét lỗi dò tìm game
+          cat << 'EOF' > SmartEconomyMod.csproj
+          <Project Sdk="Microsoft.NET.Sdk">
+            <PropertyGroup>
+              <TargetFramework>net6.0</TargetFramework>
+              <ImplicitUsings>disable</ImplicitUsings>
+              <Nullable>disable</Nullable>
+            </PropertyGroup>
 
-          # 4. Ép TargetFramework về net6.0
-          sed -i 's/<TargetFramework>.*<\/TargetFramework>/<TargetFramework>net6.0<\/TargetFramework>/g' SmartEconomyMod.csproj
+            <ItemGroup>
+              <Reference Include="StardewValley">
+                <HintPath>../StardewValley.dll</HintPath>
+                <Private>false</Private>
+              </Reference>
+              <Reference Include="StardewModdingAPI">
+                <HintPath>../StardewValley.dll</HintPath>
+                <Private>false</Private>
+              </Reference>
+            </ItemGroup>
+          </Project>
+          EOF
 
-          # 5. MẸO QUYẾT ĐỊNH: Chèn cấu hình ép tắt tính năng tự dò tìm game, chỉ định đích danh file DLL của huynh
-          # Chúng ta sẽ cấu hình để project tham chiếu trực tiếp tới file DLL huynh tải lên ở thư mục gốc.
-          sed -i '/<\/PropertyGroup>/i \\    <EnableGameAutodetect>false<\/EnableGameAutodetect>\n    <HasGameBinaries>false<\/HasGameBinaries>' SmartEconomyMod.csproj
-          
-          # Tìm file DLL của huynh (bất kể tên có dấu cách hay không) và copy thẳng vào thư mục project để làm Reference thủ công
-          cp ../"Stardew Valley.dll" ./StardewValley.dll || cp ../StardewValley.dll ./StardewValley.dll || cp ../stardew*.dll ./StardewValley.dll || true
-
-          # Thêm dòng tham chiếu trực tiếp file DLL này vào file csproj
-          sed -i '/<\/Project>/i \\  <ItemGroup>\n    <Reference Include="StardewValley">\n      <HintPath>StardewValley.dll<\/HintPath>\n      <Private>false<\/Private>\n    <\/Reference>\n  <\/ItemGroup>' SmartEconomyMod.csproj
-
-          # 6. Dọn dẹp file mặc định và đưa code chính của huynh vào project
+          # 3. Đồng bộ tệp game gốc của huynh (hỗ trợ cả viết liền và dấu cách)
           cd ..
-          rm -f SmartEconomyMod/Class1.cs
+          if [ -f "Stardew Valley.dll" ]; then
+            mv "Stardew Valley.dll" StardewValley.dll
+          fi
+
+          # 4. Đưa file mã nguồn ModEntry.cs vào đúng vị trí biên dịch
           mv ModEntry.cs SmartEconomyMod/
 
       - name: Build Mod DLL
         run: |
           cd SmartEconomyMod
-          # Thực hiện build với cấu hình bỏ qua tạo file Zip game gốc và bỏ qua kiểm tra thư mục cài game
-          dotnet build -c Release /p:EnableModZip=false /p:IgnoreMaxMissingArtifacts=true
+          # Tiến hành biên dịch trực tiếp ra file DLL thành phẩm
+          dotnet build -c Release
 
       - name: Upload Finished DLL
         uses: actions/upload-artifact@v4
