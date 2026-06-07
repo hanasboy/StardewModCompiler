@@ -17,28 +17,30 @@ jobs:
 
       - name: Create Mock Project & Add Dependencies
         run: |
-          # 1. Tạo project class library bằng template mặc định (sẽ tự động chọn net8.0 để không bị lỗi lệnh)
+          # 1. Tạo project class library bằng template mặc định
           dotnet new classlib -n SmartEconomyMod
           
-          # 2. Cài đặt bộ công cụ build mod chính thức bản tương thích ổn định nhất
+          # 2. Cài đặt bộ công cụ build mod chính thức bản 4.1.1
           cd SmartEconomyMod
           dotnet add package Pathoschild.Stardew.ModBuildConfig --version 4.1.1
 
-          # 3. Ép cấu hình project về net6.0 để tương thích với Stardew Valley DLL của huynh
+          # 3. Ép cấu hình project về net6.0
           sed -i 's/<TargetFramework>.*<\/TargetFramework>/<TargetFramework>net6.0<\/TargetFramework>/g' SmartEconomyMod.csproj
 
-          # 4. Tạo thư mục game giả lập và đưa file DLL của huynh vào
+          # 4. Tạo thư mục game giả lập
           mkdir -p ../mock-game
-          if [ -f "../Stardew Valley.dll" ]; then
-            mv "../Stardew Valley.dll" ../mock-game/
-          elif [ -f "../StardewValley.dll" ]; then
-            mv "../StardewValley.dll" ../mock-game/"Stardew Valley.dll"
-          fi
 
-          # 5. Tạo file user cấu hình đường dẫn game ảo
+          # 5. Mẹo tìm kiếm thông minh: Bất kể file dll của huynh viết hoa/thường thế nào, ép nó về tên chuẩn "Stardew Valley.dll"
+          find .. -maxdepth 1 -iname "*stardew*valley*.dll" -exec cp {} ../mock-game/"Stardew Valley.dll" \;
+          
+          # Kiểm tra xem file đã vào đúng chỗ chưa (để log hiển thị cho huynh yên tâm)
+          echo "=== Kiểm tra thư mục game giả lập ==="
+          ls -la ../mock-game/
+
+          # 6. Tạo file user cấu hình đường dẫn game ảo
           echo '<Project><PropertyGroup><GamePath>../mock-game</GamePath></PropertyGroup></Project>' > SmartEconomyMod.csproj.user
 
-          # 6. Dọn dẹp file mặc định và đưa code chính của huynh vào project
+          # 7. Dọn dẹp file mặc định và đưa code chính của huynh vào project
           cd ..
           rm -f SmartEconomyMod/Class1.cs
           mv ModEntry.cs SmartEconomyMod/
