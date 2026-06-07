@@ -90,7 +90,7 @@ namespace SmartEconomyMod
         {
             if (!Context.IsWorldReady) return;
 
-            // Kiểm tra nút mở bảng theo dõi giá thị trường (Ví dụ nút Mở Nhật Ký hoặc nút hành động phụ)
+            // Kiểm tra nút mở bảng theo dõi giá thị trường
             if (e.Button == SButton.F4)
             {
                 Game1.activeClickableMenu = new MarketForecastMenu(this.EconomyData);
@@ -159,8 +159,9 @@ namespace SmartEconomyMod
         {
             try
             {
+                // Sửa đổi ở đây: Dùng dấu ngoặc kép đơn '' bên trong chuỗi JSON thay vì dùng gạch chéo '\\"' bừa bãi
                 string systemPrompt = $"You are {npcName} from Stardew Valley. Speak in character. " +
-                                      "If the player asks for work, append a 7-day quest at the end: [QUEST:{\\"item\\":\\"(O)24\\",\\"amount\\":5}].";
+                                      "If the player asks for work, append a 7-day quest at the end: [QUEST:{'item':'(O)24','amount':5}].";
 
                 var requestBody = new {
                     model = _config.ModelName,
@@ -184,7 +185,8 @@ namespace SmartEconomyMod
                     Game1.hudMessages.Add(new HUDMessage("Nhiệm vụ AI mới (7 ngày) đã thêm vào nhật ký!", 2));
                 }
 
-                return Regex.Replace(aiReply, @"\\[QUEST:.*?\\]", "").Trim();
+                // Sửa đổi ở đây: Regex chuẩn để xóa tag QUEST mà không gây lỗi compiler
+                return Regex.Replace(aiReply, @"\[QUEST:.*?\]", "").Trim();
             }
             catch { return $"*{npcName} không nghe rõ huynh nói gì...*"; }
         }
