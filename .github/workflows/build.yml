@@ -24,23 +24,27 @@ jobs:
           cd SmartEconomyMod
           dotnet add package Pathoschild.Stardew.ModBuildConfig --version 4.1.1
 
-          # 3. Ép cấu hình project về net6.0
+          # 3. Ép cấu hình project về net6.0 để tương thích với game
           sed -i 's/<TargetFramework>.*<\/TargetFramework>/<TargetFramework>net6.0<\/TargetFramework>/g' SmartEconomyMod.csproj
 
-          # 4. Tạo thư mục game giả lập ở cấp ngoài
+          # 4. Tạo thư mục game giả lập ở cấp ngoài song song với project
           mkdir -p ../mock-game
 
-          # 5. Tìm file DLL huynh đã tải lên ở thư mục gốc và copy chuẩn tên "StardewValley.dll" vào thư mục giả lập
+          # 5. Copy file DLL của huynh vào và ép tên chuẩn "StardewValley.dll" (viết liền)
           cp ../"Stardew Valley.dll" ../mock-game/StardewValley.dll || cp ../StardewValley.dll ../mock-game/StardewValley.dll || cp ../stardew*.dll ../mock-game/StardewValley.dll || true
           
-          # Hiển thị cấu trúc thư mục giả lập lên log để kiểm tra cho chắc chắn
-          echo "=== Danh sách file trong thư mục game giả lập ==="
+          # 6. MẸO QUYẾT ĐỊNH: Tạo file chạy giả lập "StardewValley" không đuôi để vượt qua bộ check của SMAPI trên Linux
+          touch ../mock-game/StardewValley
+          chmod +x ../mock-game/StardewValley
+
+          # Hiển thị log kiểm tra để huynh thấy cấu trúc chuẩn trước khi build
+          echo "=== Danh sách file trong mock-game ==="
           ls -la ../mock-game/
 
-          # 6. Tạo file user cấu hình đường dẫn game
+          # 7. Tạo file user cấu hình đường dẫn game ép SMAPI nhận thư mục ảo
           echo '<Project><PropertyGroup><GamePath>../mock-game</GamePath></PropertyGroup></Project>' > SmartEconomyMod.csproj.user
 
-          # 7. Dọn dẹp file mặc định và đưa code chính của huynh vào project
+          # 8. Dọn dẹp file mặc định và đưa code chính của huynh vào project
           cd ..
           rm -f SmartEconomyMod/Class1.cs
           mv ModEntry.cs SmartEconomyMod/
@@ -48,7 +52,7 @@ jobs:
       - name: Build Mod DLL
         run: |
           cd SmartEconomyMod
-          # Thực hiện build với cấu hình bỏ qua tạo file Zip game gốc
+          # Thực hiện build và tắt tính năng đóng gói zip (vì không có game thật)
           dotnet build -c Release /p:EnableModZip=false
 
       - name: Upload Finished DLL
