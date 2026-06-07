@@ -33,7 +33,3 @@ jobs:
       with:
         name: MySmartModDLL
         path: SmartNPCAndEconomyMod/bin/Release/net6.0/SmartNPCAndEconomyMod.dll
-        name: MySmartModDLL
-        path: SmartNPCAndEconomyMod/bin/Release/net6.0/SmartNPCAndEconomyMod.dll
-        name: MySmartModDLL
-        path: SmartNPCAndEconomyMod/bin/Release/net6.0/SmartNPCAndEconomyMod.dll
