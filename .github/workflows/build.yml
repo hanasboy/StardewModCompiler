@@ -1,0 +1,29 @@
+name: Build Stardew Valley Mod
+
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 6.0.x
+
+    - name: Build Mod
+      run: |
+        dotnet new classlib -n SmartNPCAndEconomyMod --force
+        copy ModEntry.cs SmartNPCAndEconomyMod\
+        cd SmartNPCAndEconomyMod
+        dotnet add package Pathoschild.Stardew.ModBuildConfig
+        dotnet build -c Release
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: MySmartModDLL
+        path: SmartNPCAndEconomyMod/bin/Release/net6.0/SmartNPCAndEconomyMod.dll
