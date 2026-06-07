@@ -14,13 +14,21 @@ jobs:
       with:
         dotnet-version: 6.0.x
 
+    - name: Create Fake Game Folder
+      run: |
+        mkdir D:\FakeGame
+        echo "" > D:\FakeGame\StardewValley.dll
+        echo "" > D:\FakeGame\StardewModdingAPI.exe
+
     - name: Build Mod
       run: |
         dotnet new classlib -n SmartNPCAndEconomyMod --force
         copy ModEntry.cs SmartNPCAndEconomyMod\
         cd SmartNPCAndEconomyMod
         dotnet add package Pathoschild.Stardew.ModBuildConfig
-        dotnet build -c Release
+        
+        # Ép buộc bộ build nhận đường dẫn game giả lập
+        dotnet build -c Release /p:GamePath="D:\FakeGame"
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
