@@ -17,9 +17,9 @@ jobs:
     - name: Create Fake Game Folder
       run: |
         mkdir D:\FakeGame
-        # Đệ đã thêm dấu ngoặc kép để tạo file có khoảng trắng chuẩn game gốc rồi đây Sư huynh!
-        echo "" > "D:\FakeGame\Stardew Valley.dll"
-        echo "" > D:\FakeGame\StardewModdingAPI.exe
+        # Dùng lệnh Set-Content để ghi dữ liệu giả lập, giúp file có dung lượng thật
+        Set-Content -Path "D:\FakeGame\Stardew Valley.dll" -Value "Fake Stardew Valley Game DLL"
+        Set-Content -Path "D:\FakeGame\StardewModdingAPI.exe" -Value "Fake SMAPI Executable File"
 
     - name: Build Mod
       run: |
@@ -34,5 +34,7 @@ jobs:
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
+        name: MySmartModDLL
+        path: SmartNPCAndEconomyMod/bin/Release/net6.0/SmartNPCAndEconomyMod.dll
         name: MySmartModDLL
         path: SmartNPCAndEconomyMod/bin/Release/net6.0/SmartNPCAndEconomyMod.dll
